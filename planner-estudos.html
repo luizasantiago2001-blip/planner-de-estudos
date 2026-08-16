@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Planner de Estudos | Concursos de Economia</title>
+<style>
+  :root {
+    --bg: #0b1120;
+    --bg-2: #0f172a;
+    --card: #111c33;
+    --card-2: #16233f;
+    --border: #1e2f52;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --primary: #3b82f6;
+    --primary-2: #2563eb;
+    --accent: #22d3ee;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --radius: 16px;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #12244a 0%, transparent 60%),
+                radial-gradient(1000px 500px at 0% 0%, #0e2039 0%, transparent 55%),
+                var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    padding: 24px 16px 60px;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  /* Header */
+  header.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand .logo {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: grid; place-items: center; font-size: 22px; font-weight: 800;
+    color: #06121f; box-shadow: var(--shadow);
+  }
+  .brand h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .brand p { font-size: 13px; color: var(--muted); }
+
+  .clock {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .clock .time { font-size: 20px; font-weight: 700; }
+  .clock .date { font-size: 12px; color: var(--muted); text-transform: capitalize; }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 20px;
+  }
+  .card {
+    background: linear-gradient(180deg, var(--card), var(--bg-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .col-4 { grid-column: span 4; }
+  .col-5 { grid-column: span 5; }
+  .col-6 { grid-column: span 6; }
+  .col-7 { grid-column: span 7; }
+  .col-8 { grid-column: span 8; }
+  .col-12 { grid-column: span 12; }
+
+  .card-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 700; margin-bottom: 18px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .card-title .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--primary); }
+  .card-title small { margin-left: auto; font-weight: 500; color: var(--muted); text-transform: none; letter-spacing: 0; }
+
+  /* Inputs & buttons */
+  input, select, textarea {
+    font-family: inherit;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+  }
+  textarea { resize: vertical; min-height: 120px; line-height: 1.55; }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary);
+    transition: transform .08s, filter .15s, background .15s;
+  }
+  button:hover { filter: brightness(1.1); }
+  button:active { transform: scale(0.97); }
+  .btn-ghost { background: var(--card-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-success { background: var(--success); }
+  .btn-danger { background: var(--danger); }
+  .btn-warning { background: var(--warning); color: #1a1300; }
+  .btn-sm { padding: 7px 11px; font-size: 13px; }
+  .btn-icon { padding: 8px 10px; }
+
+  /* Pomodoro */
+  .pomodoro { text-align: center; }
+  .timer-display {
+    font-size: 68px; font-weight: 800; font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em; margin: 8px 0 6px;
+    background: linear-gradient(135deg, var(--text), var(--accent));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .timer-status { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .timer-status.running { color: var(--success); }
+  .timer-config {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .timer-config label { font-size: 13px; color: var(--muted); }
+  .timer-config input { width: 72px; text-align: center; }
+  .timer-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .cycles-done { margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .cycles-done b { color: var(--accent); }
+
+  /* Ciclo de estudos */
+  .add-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .add-row input { flex: 1 1 160px; }
+  .add-row select { flex: 0 0 120px; width: auto; }
+
+  ul.list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+  ul.list::-webkit-scrollbar { width: 8px; }
+  ul.list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--muted);
+    border-radius: 10px;
+    padding: 11px 14px;
+  }
+  .item.prio-alta   { border-left-color: var(--danger); }
+  .item.prio-media  { border-left-color: var(--warning); }
+  .item.prio-baixa  { border-left-color: var(--success); }
+  .item.done { opacity: 0.55; }
+  .item.done .item-text { text-decoration: line-through; }
+  .item input[type="checkbox"] { width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--primary); cursor: pointer; }
+  .item-text { flex: 1; font-size: 14px; }
+  .badge {
+    font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .badge.alta  { background: rgba(239,68,68,0.15);  color: #fca5a5; }
+  .badge.media { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .badge.baixa { background: rgba(34,197,94,0.15);  color: #86efac; }
+  .item .del { background: transparent; color: var(--muted); padding: 4px 8px; }
+  .item .del:hover { color: var(--danger); }
+  .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
+
+  /* Estudo reverso / metas */
+  .goal-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .goal-row input { flex: 1; }
+  .goals-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+  .goal {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .goal input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+  .goal span { flex: 1; font-size: 14px; }
+  .goal.done span { text-decoration: line-through; opacity: 0.6; }
+  .goal .del { background: transparent; color: var(--muted); padding: 4px 8px; }
+  .goal .del:hover { color: var(--danger); }
+
+  /* Contador de questões */
+  .counter-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+  .stat { background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+  .stat .value { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat .label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stat.acertos .value { color: var(--success); }
+  .stat.erros .value { color: var(--danger); }
+  .stat.taxa .value { color: var(--accent); }
+  .counter-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+  .counter-buttons button { flex: 1; }
+  .progress-wrap { margin-top: 16px; }
+  .progress-bar { height: 10px; background: var(--card-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--danger), var(--warning), var(--success)); transition: width .3s; }
+  .progress-label { font-size: 12px; color: var(--muted); margin-top: 6px; text-align: center; }
+
+  /* Notas */
+  .notes-info { font-size: 12px; color: var(--muted); margin-top: 8px; text-align: right; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 40px; }
+
+  /* Responsivo */
+  @media (max-width: 900px) {
+    .col-4, .col-5, .col-6, .col-7, .col-8 { grid-column: span 12; }
+    .counter-stats { grid-template-columns: repeat(3, 1fr); }
+    .timer-display { font-size: 56px; }
+  }
+  @media (max-width: 520px) {
+    .brand h1 { font-size: 18px; }
+    .counter-stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo">E</div>
+      <div>
+        <h1>Planner de Estudos</h1>
+        <p>Foco em concursos de Economia — alto rendimento</p>
+      </div>
+    </div>
+    <div class="clock">
+      <div class="time" id="liveTime">--:--</div>
+      <div class="date" id="liveDate">--</div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- POMODORO -->
+    <section class="card col-4">
+      <div class="card-title"><span class="dot"></span> Pomodoro</div>
+      <div class="pomodoro">
+        <div class="timer-config">
+          <label for="focusMinutes">Tempo de foco (min):</label>
+          <input type="number" id="focusMinutes" min="1" max="180" value="25" />
+        </div>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-status" id="timerStatus">Pronto para começar</div>
+        <div class="timer-buttons">
+          <button class="btn-success" id="startBtn">Iniciar</button>
+          <button class="btn-ghost" id="pauseBtn">Pausar</button>
+          <button class="btn-danger" id="resetBtn">Zerar</button>
+        </div>
+        <div class="cycles-done">Ciclos concluídos hoje: <b id="cyclesCount">0</b></div>
+      </div>
+    </section>
+
+    <!-- CICLO DE ESTUDOS -->
+    <section class="card col-8">
+      <div class="card-title"><span class="dot"></span> Ciclo de Estudos <small>Matérias / tópicos do edital</small></div>
+      <div class="add-row">
+        <input type="text" id="subjectInput" placeholder="Ex: Microeconomia — Teoria do Consumidor" />
+        <select id="priorityInput">
+          <option value="alta">Alta</option>
+          <option value="media" selected>Média</option>
+          <option value="baixa">Baixa</option>
+        </select>
+        <button id="addSubjectBtn">Adicionar</button>
+      </div>
+      <ul class="list" id="subjectsList"></ul>
+    </section>
+
+    <!-- CONTADOR DE QUESTÕES -->
+    <section class="card col-5">
+      <div class="card-title"><span class="dot"></span> Desempenho em Questões</div>
+      <div class="counter-stats">
+        <div class="stat acertos"><div class="value" id="acertosVal">0</div><div class="label">Acertos</div></div>
+        <div class="stat erros"><div class="value" id="errosVal">0</div><div class="label">Erros</div></div>
+        <div class="stat taxa"><div class="value" id="taxaVal">0%</div><div class="label">Taxa de acerto</div></div>
+      </div>
+      <div class="counter-buttons">
+        <button class="btn-success" id="acertoBtn">+1 Acerto</button>
+        <button class="btn-danger" id="erroBtn">+1 Erro</button>
+        <button class="btn-ghost" id="resetCounterBtn">Zerar</button>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="progress-label" id="progressLabel">Nenhuma questão registrada</div>
+      </div>
+    </section>
+
+    <!-- ESTUDO REVERSO -->
+    <section class="card col-7">
+      <div class="card-title"><span class="dot"></span> Estudo Reverso <small>Metas diárias de questões</small></div>
+      <div class="goal-row">
+        <input type="text" id="goalInput" placeholder="Ex: Resolver 30 questões de Macroeconomia" />
+        <button id="addGoalBtn">Adicionar meta</button>
+      </div>
+      <ul class="goals-list" id="goalsList"></ul>
+    </section>
+
+    <!-- BLOCO DE NOTAS / FÓRMULAS -->
+    <section class="card col-12">
+      <div class="card-title"><span class="dot"></span> Bloco de Fórmulas & Anotações Rápidas</div>
+      <textarea id="notesArea" placeholder="Cole aqui fórmulas econômicas importantes, macetes, definições...&#10;Ex: PIB = C + I + G + (X - M)&#10;Elasticidade-preço = (%ΔQd) / (%ΔP)"></textarea>
+      <div class="notes-info" id="notesInfo">Salvo automaticamente</div>
+    </section>
+
+  </div>
+
+  <footer>
+    Todos os dados são salvos automaticamente no seu navegador (localStorage). Nada é enviado para servidores.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const LS = {
+    subjects: "planner_subjects",
+    goals: "planner_goals",
+    notes: "planner_notes",
+    counter: "planner_counter",
+    focus: "planner_focus",
+    cycles: "planner_cycles",
+  };
+
+  const load = (key, fallback) => {
+    try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); }
+    catch (e) { return fallback; }
+  };
+  const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+
+  /* ---------- RELÓGIO ---------- */
+  const timeEl = document.getElementById("liveTime");
+  const dateEl = document.getElementById("liveDate");
+  function tickClock() {
+    const now = new Date();
+    timeEl.textContent = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    dateEl.textContent = now.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+  }
+  tickClock();
+  setInterval(tickClock, 1000 * 30);
+
+  /* ---------- POMODORO ---------- */
+  const focusInput = document.getElementById("focusMinutes");
+  const display = document.getElementById("timerDisplay");
+  const status = document.getElementById("timerStatus");
+  const startBtn = document.getElementById("startBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const cyclesCountEl = document.getElementById("cyclesCount");
+
+  let focusMinutes = load(LS.focus, 25);
+  let cyclesData = load(LS.cycles, { date: new Date().toDateString(), count: 0 });
+  if (cyclesData.date !== new Date().toDateString()) {
+    cyclesData = { date: new Date().toDateString(), count: 0 };
+    save(LS.cycles, cyclesData);
+  }
+  focusInput.value = focusMinutes;
+  cyclesCountEl.textContent = cyclesData.count;
+
+  let remaining = focusMinutes * 60;
+  let interval = null;
+  let running = false;
+
+  function fmt(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+  }
+  function render() { display.textContent = fmt(remaining); }
+  render();
+
+  function setStatus(text, isRunning) {
+    status.textContent = text;
+    status.classList.toggle("running", !!isRunning);
+  }
+
+  focusInput.addEventListener("input", function () {
+    let val = parseInt(focusInput.value, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > 180) val = 180;
+    focusMinutes = val;
+    save(LS.focus, focusMinutes);
+    if (!running) { remaining = focusMinutes * 60; render(); }
+  });
+
+  function startTimer() {
+    if (running) return;
+    if (remaining <= 0) remaining = focusMinutes * 60;
+    running = true;
+    setStatus("Foco total! Estudando...", true);
+    interval = setInterval(function () {
+      remaining--;
+      render();
+      if (remaining <= 0) {
+        clearInterval(interval);
+        running = false;
+        cyclesData.count++;
+        save(LS.cycles, cyclesData);
+        cyclesCountEl.textContent = cyclesData.count;
+        setStatus("Ciclo concluído! Faça uma pausa.", false);
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.frequency.value = 880; gain.gain.value = 0.2;
+          osc.start(); osc.stop(ctx.currentTime + 0.5);
+        } catch (e) {}
+        remaining = focusMinutes * 60;
+        render();
+      }
+    }, 1000);
+  }
+  function pauseTimer() {
+    if (!running) return;
+    clearInterval(interval);
+    running = false;
+    setStatus("Pausado", false);
+  }
+  function resetTimer() {
+    clearInterval(interval);
+    running = false;
+    remaining = focusMinutes * 60;
+    render();
+    setStatus("Pronto para começar", false);
+  }
+  startBtn.addEventListener("click", startTimer);
+  pauseBtn.addEventListener("click", pauseTimer);
+  resetBtn.addEventListener("click", resetTimer);
+
+  /* ---------- CICLO DE ESTUDOS ---------- */
+  const subjectInput = document.getElementById("subjectInput");
+  const priorityInput = document.getElementById("priorityInput");
+  const addSubjectBtn = document.getElementById("addSubjectBtn");
+  const subjectsList = document.getElementById("subjectsList");
+
+  let subjects = load(LS.subjects, []);
+  const prioLabel = { alta: "Alta", media: "Média", baixa: "Baixa" };
+
+  function renderSubjects() {
+    subjectsList.innerHTML = "";
+    if (!subjects.length) {
+      subjectsList.innerHTML = '<div class="empty">Nenhuma matéria adicionada ainda.</div>';
+      return;
+    }
+    subjects.forEach(function (s, i) {
+      const li = document.createElement("li");
+      li.className = "item prio-" + s.priority + (s.done ? " done" : "");
+      li.innerHTML =
+        '<input type="checkbox" ' + (s.done ? "checked" : "") + ' />' +
+        '<span class="item-text"></span>' +
+        '<span class="badge ' + s.priority + '">' + prioLabel[s.priority] + "</span>" +
+        '<button class="del btn-icon" title="Excluir">✕</button>';
+      li.querySelector(".item-text").textContent = s.text;
+      li.querySelector('input[type="checkbox"]').addEventListener("change", function () {
+        subjects[i].done = this.checked;
+        save(LS.subjects, subjects);
+        renderSubjects();
+      });
+      li.querySelector(".del").addEventListener("click", function () {
+        subjects.splice(i, 1);
+        save(LS.subjects, subjects);
+        renderSubjects();
+      });
+      subjectsList.appendChild(li);
+    });
+  }
+  function addSubject() {
+    const text = subjectInput.value.trim();
+    if (!text) return;
+    subjects.push({ text: text, priority: priorityInput.value, done: false });
+    save(LS.subjects, subjects);
+    subjectInput.value = "";
+    renderSubjects();
+  }
+  addSubjectBtn.addEventListener("click", addSubject);
+  subjectInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) addSubject();
+  });
+  renderSubjects();
+
+  /* ---------- ESTUDO REVERSO (metas) ---------- */
+  const goalInput = document.getElementById("goalInput");
+  const addGoalBtn = document.getElementById("addGoalBtn");
+  const goalsList = document.getElementById("goalsList");
+
+  let goals = load(LS.goals, []);
+  function renderGoals() {
+    goalsList.innerHTML = "";
+    if (!goals.length) {
+      goalsList.innerHTML = '<div class="empty">Defina suas metas diárias de questões.</div>';
+      return;
+    }
+    goals.forEach(function (g, i) {
+      const li = document.createElement("li");
+      li.className = "goal" + (g.done ? " done" : "");
+      li.innerHTML =
+        '<input type="checkbox" ' + (g.done ? "checked" : "") + ' />' +
+        "<span></span>" +
+        '<button class="del btn-icon" title="Excluir">✕</button>';
+      li.querySelector("span").textContent = g.text;
+      li.querySelector('input[type="checkbox"]').addEventListener("change", function () {
+        goals[i].done = this.checked;
+        save(LS.goals, goals);
+        renderGoals();
+      });
+      li.querySelector(".del").addEventListener("click", function () {
+        goals.splice(i, 1);
+        save(LS.goals, goals);
+        renderGoals();
+      });
+      goalsList.appendChild(li);
+    });
+  }
+  function addGoal() {
+    const text = goalInput.value.trim();
+    if (!text) return;
+    goals.push({ text: text, done: false });
+    save(LS.goals, goals);
+    goalInput.value = "";
+    renderGoals();
+  }
+  addGoalBtn.addEventListener("click", addGoal);
+  goalInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) addGoal();
+  });
+  renderGoals();
+
+  /* ---------- CONTADOR DE QUESTÕES ---------- */
+  const acertosVal = document.getElementById("acertosVal");
+  const errosVal = document.getElementById("errosVal");
+  const taxaVal = document.getElementById("taxaVal");
+  const progressFill = document.getElementById("progressFill");
+  const progressLabel = document.getElementById("progressLabel");
+
+  let counter = load(LS.counter, { acertos: 0, erros: 0 });
+  function renderCounter() {
+    const total = counter.acertos + counter.erros;
+    const taxa = total ? Math.round((counter.acertos / total) * 100) : 0;
+    acertosVal.textContent = counter.acertos;
+    errosVal.textContent = counter.erros;
+    taxaVal.textContent = taxa + "%";
+    progressFill.style.width = taxa + "%";
+    progressLabel.textContent = total
+      ? total + " questões resolvidas — " + counter.acertos + " certas / " + counter.erros + " erradas"
+      : "Nenhuma questão registrada";
+  }
+  document.getElementById("acertoBtn").addEventListener("click", function () {
+    counter.acertos++; save(LS.counter, counter); renderCounter();
+  });
+  document.getElementById("erroBtn").addEventListener("click", function () {
+    counter.erros++; save(LS.counter, counter); renderCounter();
+  });
+  document.getElementById("resetCounterBtn").addEventListener("click", function () {
+    counter = { acertos: 0, erros: 0 }; save(LS.counter, counter); renderCounter();
+  });
+  renderCounter();
+
+  /* ---------- BLOCO DE NOTAS ---------- */
+  const notesArea = document.getElementById("notesArea");
+  const notesInfo = document.getElementById("notesInfo");
+  notesArea.value = load(LS.notes, "");
+  let notesTimer = null;
+  notesArea.addEventListener("input", function () {
+    clearTimeout(notesTimer);
+    notesInfo.textContent = "Salvando...";
+    notesTimer = setTimeout(function () {
+      save(LS.notes, notesArea.value);
+      notesInfo.textContent = "Salvo automaticamente às " +
+        new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    }, 400);
+  });
+})();
+</script>
+</body>
+</html>
